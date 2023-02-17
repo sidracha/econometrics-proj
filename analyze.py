@@ -53,6 +53,6 @@ def main():
 				
 
 		for i in PartyValuesArray:
-			if (	)		
+			if (	)	
 
 			#print(row[:4] + " House: {}" + "Senate: {}, President: {}".format(house + " " + , ))
