@@ -48,58 +48,10 @@ def get_data():
 		return x_values, y_values
 
 
-def graph_real():
+def get_obj():
 
 	x_values, y_values = get_data()
-
-	tick_spacing = 1600
-
-
-
 	dates = mdates.num2date(mdates.datestr2num(x_values))
-
-	fig, ax = plt.subplots(1, 1)
-	ax.plot(dates, y_values)
-	ax.xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
-
-
-	ax.minorticks_on()
-
-	"""
-	for i, date in enumerate(dates):
-		date2 = str(date)[:10]
-		date_arr = date2.split("-")
-		
-		if date2 == "1975-01-03" or date2 == "1981-01-05" or date2 == "1987-01-05" or date2 == "1997-01-03" or date2 == "2003-01-03" or date2 == "2009-01-05" or date2 == "2015-01-05":
-			ax.axvline(date)
-
-		
-		if int(date_arr[0]) % 2 == 0:
-			continue
-		
-		if int(date_arr[1]) == 1 and int(date_arr[2]) == 4:
-			print(date)
-			ax.axvline(date)
-		
-
-	"""
-	next1 = 1977
-	
-	for i, d in enumerate(dates):
-
-
-		date = str(d)[:10]
-		if date == "1973-01-04":
-			ax.axvline(d)
-		
-
-		
-
-		if int(date[:4]) == next1:
-			
-
-			ax.axvline(d)
-			next1 += 4
 
 
 	next = 1977
@@ -122,14 +74,6 @@ def graph_real():
 		obj[str(current)][0].append(date)
 		obj[str(current)][1].append(y_values[i])
 	
-
-
-	plt.plot(dates, y_values, "-")
-	
-	plt.xlabel("Date")
-	plt.ylabel("DOW Jones Index Price ($)")
-
-	#plt.show()
 
 	return obj
 
@@ -304,11 +248,52 @@ def analyze_with_party(slopes, percentages):
 	print("percentages", get_average_values(percentages))	
 
 
+def graph_real():
+
+	x_values, y_values = get_data()
+	tick_spacing = 1600
+	dates = mdates.num2date(mdates.datestr2num(x_values))
+	fig, ax = plt.subplots(1, 1)
+	ax.plot(dates, y_values)
+	ax.xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+	ax.minorticks_on()
+
+	next1 = 1977
+	
+	for i, d in enumerate(dates):
 
 
-obj = graph_real()
+		date = str(d)[:10]
+		if date == "1973-01-04":
+			ax.axvline(d)
+		
+		if int(date[:4]) == next1:
+			
 
-slopes, percentages = linear_regressions(obj)
+			ax.axvline(d)
+			next1 += 4
+
+	
+	plt.plot(dates, y_values, "-")
+	
+	plt.xlabel("Date")
+	plt.ylabel("DOW Jones Index Price ($)")
+
+	plt.show()
 
 
-analyze_with_party(slopes, percentages)
+
+print("1. Print real data")
+print("2. Print slopes and percentages")
+
+user_input = input("> ")
+user_input = user_input.strip()
+if user_input == "1":
+	graph_real()
+
+if user_input == "2":
+	obj = get_obj()
+	slopes, percentages = linear_regressions(obj)
+	analyze_with_party(slopes, percentages)
+
+
