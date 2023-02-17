@@ -98,33 +98,33 @@ def print_president_data():
 # }
 
 def linear_regressions(obj):
+	f = open(PRESIDENTS_JSON_PATH)
+	president_data = json.load(f)
+
 	
 	date_format = "%Y-%m-%d"
 
 	slopes = []
 	percentages = []
 
+	print("Year   Party        Slope($/year)     Slope ($/day)        Intercept          R-Squared")
+
 	for k, v in obj.items():
-
 		dates = obj[k][0]
-		values = obj[k][1]
-
-		#dates = obj["1973"][0]
-		#values = obj["1973"][1]
 
 		dates_arr = []
-		values_arr = []
+		values_arr = obj[k][1]
+
+		values_sum = 0
+		values_count = 0
 
 		for i, date in enumerate(dates):
 			a = datetime.datetime.strptime(dates[0], date_format)
 			b = datetime.datetime.strptime(date, date_format)
 			delta = b-a
 			dates_arr.append(delta.days)
-			values_arr.append(values[i])
-
-
-			#print(delta.days, values[i], date)
-			
+			values_sum += values_arr[i]
+			values_count += 1 
 
 		data_time = np.asarray(dates_arr)
 		data_values = np.asarray(values_arr)
@@ -135,36 +135,37 @@ def linear_regressions(obj):
 		regr.fit(df.time.values.reshape(-1, 1), df["count"])
 
 		slope = regr.coef_[0] * 365
+		slope_day = slope / 365
 		slopes_obj = {k: slope}
 		slopes.append(slopes_obj)
 
-		percentage = slope / values[0] * 100
+		percentage = slope / values_arr[0] * 100
 		percentage_obj = {k: percentage}
 		percentages.append(percentage_obj)
 
-		print(percentage, slope)
+		intercept = regr.intercept_
+
+		SSR = 0
+		SST = 0
+		average = values_sum / values_count
+		for i, v in enumerate(dates_arr):
+			predicted = (dates_arr[i] * slope_day) + intercept
+			actual = values_arr[i]
+			residual = actual - predicted
+			SSR += (residual ** 2)
+		
+			distance= actual - average
+			SST += (distance ** 2)
+
+		r_squared = 1 - (SSR / SST)
+		print(k, president_data[k], slope, slope_day, intercept, r_squared)
+
+	print("-------------------------")
+	print("change in price per year on average: ", get_average_values(slopes))
+	print("percent change per year on average: ", get_average_values(percentages))
 
 	return slopes, percentages
 
-
-	
-	"""
-	#data_time = np.asarray(obj["2017"][0])
-	#data_count = np.asarray(obj["2017"][1])
-
-	data_time = np.asarray([1, 2, 3, 4, 5, 6])
-	data_count = np.asarray([2, 4, 6, 8, 10, 12])
-
-	df = pd.DataFrame({"time": data_time, "count": data_count})
-
-	#df.time = pd.to_datetime(df.time)
-
-	regr = linear_model.LinearRegression()
-	regr.fit(df.time.values.reshape(-1, 1), df["count"])
-
-	print(regr.coef_)
-
-	"""
 
 #slopes = [
 # 	{
@@ -241,11 +242,11 @@ def analyze_with_party(slopes, percentages):
 
 	"""
 
-	print("slopes", get_average_values(slopes))
+	#print("slopes", get_average_values(slopes))
 
-	print("--------")
+	#print("--------")
 
-	print("percentages", get_average_values(percentages))	
+	#print("percentages", get_average_values(percentages))	
 
 
 def graph_real():
@@ -283,7 +284,7 @@ def graph_real():
 
 
 
-print("1. Print real data")
+print("1. Graph real data")
 print("2. Print slopes and percentages")
 
 user_input = input("> ")
@@ -294,6 +295,5 @@ if user_input == "1":
 if user_input == "2":
 	obj = get_obj()
 	slopes, percentages = linear_regressions(obj)
-	analyze_with_party(slopes, percentages)
 
 
