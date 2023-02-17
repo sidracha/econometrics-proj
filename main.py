@@ -124,8 +124,10 @@ def graph_real():
 	
 
 
-	#plt.plot(dates, y_values, "-")
-
+	plt.plot(dates, y_values, "-")
+	
+	plt.xlabel("Date")
+	plt.ylabel("DOW Jones Index Price ($)")
 
 	#plt.show()
 
@@ -196,8 +198,8 @@ def linear_regressions(obj):
 		percentage_obj = {k: percentage}
 		percentages.append(percentage_obj)
 
+		print(percentage, slope)
 
-	
 	return slopes, percentages
 
 
@@ -230,10 +232,44 @@ def linear_regressions(obj):
 
 #same with percentages
 
+def get_average_values(array_of_objs):
+	f = open(PRESIDENTS_JSON_PATH)
+	president_data = json.load(f)
 
+	dems_agg = 0
+	repubs_agg = 0
+
+	dems_count = 0
+	repubs_count = 0
+
+
+	for obj in array_of_objs:
+		year = list(obj.keys())[0]
+		party = president_data[year]
+		quantity = obj[year]
+
+		if president_data[year] == "Democrat":
+			dems_agg += quantity
+			dems_count += 1
+		
+		if president_data[year] == "Republican":
+			repubs_agg += quantity
+			repubs_count += 1
+		
+
+	return_obj = {
+		"Democrats": dems_agg/dems_count,
+		"Republicans": repubs_agg/repubs_count
+	}
+
+
+	return return_obj	
 def analyze_with_party(slopes, percentages):
 
-	f = open("presidents.json")
+
+	"""
+
+	f = open(PRESIDENTS_JSON_PATH)
 	president_data = json.load(f)
 
 	dems_agg = 0
@@ -259,6 +295,13 @@ def analyze_with_party(slopes, percentages):
 	print(f"Democrat average percent change: {dems_agg/dems_count}")
 	print(f"Republican average percent change: {repubs_agg/repubs_count}")
 
+	"""
+
+	print("slopes", get_average_values(slopes))
+
+	print("--------")
+
+	print("percentages", get_average_values(percentages))	
 
 
 
