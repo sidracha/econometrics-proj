@@ -107,9 +107,19 @@ def linear_regressions(obj):
 	slopes = []
 	percentages = []
 
-	print("Year   Party        Slope($/year)     Slope ($/day)        Intercept          R-Squared")
+	#print("Year   Party        Slope($/year)     Slope ($/day)      % change           Intercept         R-Squared")
+
+	data = {
+		"Party": [],
+		"Slope ($/year)": [],
+		"Slope ($/day)": [],
+		"% change (4 yrs)": [],
+		"Intercept": [],
+		"R Squared": []
+	}
 
 	for k, v in obj.items():
+
 		dates = obj[k][0]
 
 		dates_arr = []
@@ -158,11 +168,28 @@ def linear_regressions(obj):
 			SST += (distance ** 2)
 
 		r_squared = 1 - (SSR / SST)
-		print(k, president_data[k], slope, slope_day, intercept, r_squared)
 
-	print("-------------------------")
-	print("change in price per year on average: ", get_average_values(slopes))
-	print("percent change per year on average: ", get_average_values(percentages))
+		
+		#print(k, president_data[k], slope, slope_day, percentage, intercept, r_squared)
+		data["Party"].append(president_data[k])
+		data["Slope ($/year)"].append(slope)
+		data["Slope ($/day)"].append(slope_day)
+		data["% change (4 yrs)"].append(percentage)
+		data["Intercept"].append(intercept)
+		data["R Squared"].append(r_squared)
+
+	#print("-------------------------")
+	#print("change in price per year on average: ", get_average_values(slopes))
+	#print("percent change per year on average: ", get_average_values(percentages))
+
+	df_index = []
+	for k, v in president_data.items():
+		df_index.append(k)
+	
+
+	df = pd.DataFrame(data, index=df_index)
+
+	print(df)
 
 	return slopes, percentages
 
@@ -209,44 +236,105 @@ def get_average_values(array_of_objs):
 
 
 	return return_obj	
-def analyze_with_party(slopes, percentages):
 
 
-	"""
 
+
+def example_regression_plot_values(year: int):
+
+
+	data = {
+
+		"2017": [4.78, 21353.73],
+		"2013": [2.71, 14850.10],
+		"1977": [0.006, 857.77]
+
+	}
+
+
+	x_values_old, y_values_old = get_data()
+
+	x_values = []
+	y_values = []
+
+	for i, val in enumerate(x_values_old):
+		if int(val[6:]) < year or int(val[6:]) > year + 3:
+			continue
+		
+
+		x_values.append(val)
+		y_values.append(y_values_old[i])
+	
+	dates = mdates.num2date(mdates.datestr2num(x_values))
+
+
+	
+	date_format = "%m/%d/%Y"
+
+	line_y_values = []
+
+
+	for i, v in enumerate(x_values):
+		
+		a = datetime.datetime.strptime(x_values[0], date_format)
+		b = datetime.datetime.strptime(v, date_format)
+		delta = b - a
+		days = delta.days
+		val = days * data[str(year)][0] + data[str(year)][1]
+
+		line_y_values.append(val)
+
+
+	
+
+	return dates, y_values, line_y_values
+
+def example_regression_plot(year: int):
 	f = open(PRESIDENTS_JSON_PATH)
 	president_data = json.load(f)
 
-	dems_agg = 0
-	repubs_agg = 0
+	dates, y_values, line_y_values = example_regression_plot_values(year)
 
-	dems_count = 0
-	repubs_count = 0
-
-	for percentage_obj in percentages:
-		year = list(percentage_obj.keys())[0]
-		party = president_data[year]
-		percent_change = percentage_obj[year]
-		#print(f"year: {year}, party: {party}, percent change: {percent_change}")
-
-		if president_data[year] == "Democrat":
-			dems_agg += percent_change
-			dems_count +=1 
-		
-		if president_data[year] == "Republican": 
-			repubs_agg += percent_change
-			repubs_count += 1
+	fig, ax = plt.subplots(1, 1)
+	ax.plot(dates, y_values)
+	plt.plot(dates, y_values, "-")
+	plt.plot(dates, line_y_values)
+	plt.xlabel("Date")
+	plt.ylabel("DOW Jones Price ($)")
 	
-	print(f"Democrat average percent change: {dems_agg/dems_count}")
-	print(f"Republican average percent change: {repubs_agg/repubs_count}")
+	party_control = president_data[str(year)]
+	plt.title(party_control + " Control")
+	
+	plt.show()
 
-	"""
 
-	#print("slopes", get_average_values(slopes))
+def example_residual_plot(year: int):
+	f = open(PRESIDENTS_JSON_PATH)
+	president_data = json.load(f)
+	
 
-	#print("--------")
+	dates, y_values, line_y_values = example_regression_plot_values(year)
+	residual_zero = []
+	residuals = []
 
-	#print("percentages", get_average_values(percentages))	
+
+	for val in dates:
+		residual_zero.append(0)
+
+
+	for i, v in enumerate(line_y_values):
+		residual = y_values[i] - v
+		residuals.append(residual)
+
+	
+	plt.plot(dates, residual_zero)
+	plt.scatter(dates, residuals)
+	plt.xlabel("Date")
+	plt.ylabel("Residual")
+	plt.title(president_data[str(year)]+ " Control")
+
+	plt.show()
+	
 
 
 def graph_real():
@@ -278,7 +366,7 @@ def graph_real():
 	plt.plot(dates, y_values, "-")
 	
 	plt.xlabel("Date")
-	plt.ylabel("DOW Jones Index Price ($)")
+	plt.ylabel("DOW Jones Price ($)")
 
 	plt.show()
 
@@ -286,6 +374,7 @@ def graph_real():
 
 print("1. Graph real data")
 print("2. Print slopes and percentages")
+print("3. Graph example regressions")
 
 user_input = input("> ")
 user_input = user_input.strip()
@@ -297,3 +386,11 @@ if user_input == "2":
 	slopes, percentages = linear_regressions(obj)
 
 
+if user_input == "3":
+	print("year?")
+	user_input = input("> ")
+
+	user_input = int(user_input)
+
+	example_regression_plot(user_input)
+	#example_residual_plot(user_input)
